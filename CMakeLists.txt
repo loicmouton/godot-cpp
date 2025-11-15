@@ -61,8 +61,14 @@ project(
     LANGUAGES CXX
 )
 
+# Includes for install rule
+include("CMakePackageConfigHelpers")
+include("GNUInstallDirs")
+
 compiler_detection()
 godotcpp_generate()
+
+godotcpp_install()
 
 # Conditionally enable the godot-cpp.test.<target> integration testing targets
 if(GODOTCPP_ENABLE_TESTING)
