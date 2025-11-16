@@ -112,7 +112,6 @@ function(godotcpp_options)
         CACHE STRING
         "Which target to generate. valid values are: template_debug, template_release, and editor"
     )
-    set_property(CACHE GODOTCPP_TARGET PROPERTY STRINGS "template_debug;template_release;editor")
 
     # Input from user for GDExtension interface header and the API JSON file
     set(GODOTCPP_GDEXTENSION_DIR
