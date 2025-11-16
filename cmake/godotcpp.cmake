@@ -107,7 +107,8 @@ function(godotcpp_options)
     # To create a universal build for macos, set CMAKE_OSX_ARCHITECTURES
 
     set(GODOTCPP_TARGET
-        "template_debug"
+        #"template_debug"
+        "$<IF:$<CONFIG:Release>,template_release,$<IF:$<CONFIG:Editor>,editor,template_debug>>"
         CACHE STRING
         "Which target to generate. valid values are: template_debug, template_release, and editor"
     )
@@ -408,33 +409,58 @@ function( godotcpp_install )
     option(GODOTCPP_INSTALL "Add godot-cpp install rule" ${GODOTCPP_IS_TOP_LEVEL})
 
     if(GODOTCPP_INSTALL)
+        set(install_targets godot-cpp)
+        set(targets_export_name godot-cpp-targets)
+        set(project_config ${PROJECT_BINARY_DIR}/godot-cpp-config.cmake)
+        set(install_cmake_dir ${CMAKE_INSTALL_LIBDIR}/cmake/godot)
+
+        configure_package_config_file(
+            ${PROJECT_SOURCE_DIR}/cmake/godot-cpp-config.cmake.in
+            ${project_config}
+            INSTALL_DESTINATION ${install_cmake_dir})
+
         # Install the library
-        install(TARGETS "godot-cpp"
-            EXPORT "godot-config"
-            ARCHIVE
-                DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            COMPONENT "godot-cpp"
+        install(TARGETS ${install_targets}
+            #COMPONENT "godot-cpp"
+            EXPORT ${targets_export_name}
+            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         )
-        #Install the headers
+
+        export(TARGETS ${install_targets}
+            NAMESPACE godot::
+            FILE ${PROJECT_BINARY_DIR}/${targets_export_name}.cmake
+            #COMPONENT "godot-cpp"
+        )
+        
+        # Install version, config and target files.
+        install(FILES ${project_config}
+          DESTINATION ${install_cmake_dir}
+          #COMPONENT "godot-cpp"
+        )
+        install(EXPORT ${targets_export_name}
+            DESTINATION ${install_cmake_dir}
+            NAMESPACE godot::
+            #COMPONENT "godot-cpp"
+        )
+
+        # Install the public headers
         install(
             DIRECTORY
                 "${PROJECT_SOURCE_DIR}/include/"
                 "${PROJECT_BINARY_DIR}/gen/include/"
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-            COMPONENT "godot-cpp"
+            #COMPONENT "godot-cpp"
         )
         install(FILES "${GODOTCPP_GDEXTENSION_DIR}/gdextension_interface.h"
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-            COMPONENT "godot-cpp"
-        )
-        # Install the export config file, so the library can be found via find_package
-        install(EXPORT "godot-config"
-            NAMESPACE "godot::"
-            DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/godot"
-            COMPONENT "godot-cpp"
+            #COMPONENT "godot-cpp"
         )
 
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.19") # string(JSON...) only available in cmake v3.19+
+            set(version_config ${PROJECT_BINARY_DIR}/godot-cpp-config-version.cmake)
+
             # Use the JSON api file to get the version
             file(READ "${GODOTCPP_GDEXTENSION_DIR}/extension_api.json" GODOTCPP_GDEXTENSION_API_FILE)
             string(JSON GODOT_API_VERSION_MAJOR GET "${GODOTCPP_GDEXTENSION_API_FILE}" "header" "version_major") # GODOT_API_VERSION_MAJOR = GODOTCPP_GDEXTENSION_API_FILE["header"]["version_major"]
@@ -442,13 +468,14 @@ function( godotcpp_install )
             string(JSON GODOT_API_VERSION_PATCH GET "${GODOTCPP_GDEXTENSION_API_FILE}" "header" "version_patch")
             set(GODOT_API_VERSION "${GODOT_API_VERSION_MAJOR}.${GODOT_API_VERSION_MINOR}.${GODOT_API_VERSION_PATCH}")
             # Install the config version file so that the gdextension version can be specified in find_package
-            write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/godot-config-version.cmake"
-                VERSION "${GODOT_API_VERSION}"
+            write_basic_package_version_file(
+                ${version_config}
+                VERSION ${GODOT_API_VERSION}
                 COMPATIBILITY SameMinorVersion # https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/what_is_gdextension.html#version-compatibility
             )
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/godot-config-version.cmake"
-                DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/godot"
-                COMPONENT "godot-cpp"
+            install(FILES ${version_config}
+                DESTINATION ${install_cmake_dir}
+                #COMPONENT "godot-cpp"
             )
         endif()
     endif()

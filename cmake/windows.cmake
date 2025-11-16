@@ -71,7 +71,12 @@ function(windows_options)
     ]]
 
     option(GODOTCPP_USE_STATIC_CPP "Link MinGW/MSVC C++ runtime libraries statically" ON)
-    option(GODOTCPP_DEBUG_CRT "Compile with MSVC's debug CRT (/MDd)" OFF)
+
+    set(GODOTCPP_DEBUG_CRT
+        "$<IF:$<CONFIG:Debug>,ON,OFF>"
+        CACHE STRING
+        "Compile with MSVC's debug CRT (/MDd)"
+    )
 
     message(
         STATUS
