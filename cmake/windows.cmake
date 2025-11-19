@@ -85,7 +85,7 @@ function(windows_options)
     )
 
     set(CMAKE_MSVC_RUNTIME_LIBRARY
-        "MultiThreaded$<IF:$<BOOL:${GODOTCPP_DEBUG_CRT}>,DebugDLL,$<$<NOT:$<BOOL:${GODOTCPP_USE_STATIC_CPP}>>:DLL>>"
+        "MultiThreaded$<${GODOTCPP_DEBUG_CRT}:Debug>$<$<BOOL:${GODOTCPP_USE_STATIC_CPP}>:DLL>"
         CACHE STRING
         "Select the MSVC runtime library for use by compilers targeting the MSVC ABI."
     )
