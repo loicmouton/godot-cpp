@@ -107,7 +107,6 @@ function(godotcpp_options)
     # To create a universal build for macos, set CMAKE_OSX_ARCHITECTURES
 
     set(GODOTCPP_TARGET
-        #"template_debug"
         "$<IF:$<CONFIG:Release>,template_release,$<IF:$<CONFIG:Editor>,editor,template_debug>>"
         CACHE STRING
         "Which target to generate. valid values are: template_debug, template_release, and editor"
